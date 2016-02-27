@@ -239,26 +239,28 @@ class Ebizmarts_Autoresponder_Model_EventObserver
 
             $order = $observer->getEvent()->getOrder();
             $configStatuses = explode(',',Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_ORDER_STATUS, $storeId));
+            $customerGroups = explode(",", Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_CUSTOMER_GROUPS, $storeId));
+            if(in_array($order->getCustomerGroupId(), $customerGroups)) {
+                foreach ($configStatuses as $status) {
+                    if (isset($new_data['status']) && isset($original_data['status']) && $original_data['status'] !== $new_data['status'] && $new_data['status'] == $status) {
+                        if (Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_ACTIVE, $storeId) && Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_TRIGGER, $storeId) == 1) {
+                            $tags = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_MANDRILL_TAG, $storeId) . "_$storeId";
+                            $mailSubject = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_SUBJECT, $storeId);
+                            $senderId = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::GENERAL_SENDER, $storeId);
+                            $sender = array('name' => Mage::getStoreConfig("trans_email/ident_$senderId/name", $storeId), 'email' => Mage::getStoreConfig("trans_email/ident_$senderId/email", $storeId));
+                            $templateId = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_TEMPLATE, $storeId);
 
-            foreach($configStatuses as $status) {
-                if (isset($new_data['status']) && isset($original_data['status']) && $original_data['status'] !== $new_data['status'] && $new_data['status'] == $status) {
-                    if (Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_ACTIVE, $storeId) && Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_TRIGGER, $storeId) == 1) {
-                        $tags = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_MANDRILL_TAG, $storeId) . "_$storeId";
-                        $mailSubject = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_SUBJECT, $storeId);
-                        $senderId = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::GENERAL_SENDER, $storeId);
-                        $sender = array('name' => Mage::getStoreConfig("trans_email/ident_$senderId/name", $storeId), 'email' => Mage::getStoreConfig("trans_email/ident_$senderId/email", $storeId));
-                        $templateId = Mage::getStoreConfig(Ebizmarts_Autoresponder_Model_Config::NEWORDER_TEMPLATE, $storeId);
-
-                        //Send email
-                        $translate = Mage::getSingleton('core/translate');
-                        $email = $order->getCustomerEmail();
-                        if (Mage::helper('ebizmarts_autoresponder')->isSubscribed($email, 'neworder', $storeId)) {
-                            $name = $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname();
-                            $url = Mage::getModel('core/url')->setStore($storeId)->getUrl() . 'ebizautoresponder/autoresponder/unsubscribe?list=neworder&email=' . $email . '&store=' . $storeId;
-                            $vars = array('tags' => array($tags), 'url' => $url);
-                            $mail = Mage::getModel('core/email_template')->setTemplateSubject($mailSubject)->sendTransactional($templateId, $sender, $email, $name, $vars, $storeId);
-                            $translate->setTranslateInLine(true);
-                            Mage::helper('ebizmarts_abandonedcart')->saveMail('new order', $email, $name, "", $storeId);
+                            //Send email
+                            $translate = Mage::getSingleton('core/translate');
+                            $email = $order->getCustomerEmail();
+                            if (Mage::helper('ebizmarts_autoresponder')->isSubscribed($email, 'neworder', $storeId)) {
+                                $name = $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname();
+                                $url = Mage::getModel('core/url')->setStore($storeId)->getUrl() . 'ebizautoresponder/autoresponder/unsubscribe?list=neworder&email=' . $email . '&store=' . $storeId;
+                                $vars = array('tags' => array($tags), 'url' => $url);
+                                $mail = Mage::getModel('core/email_template')->setTemplateSubject($mailSubject)->sendTransactional($templateId, $sender, $email, $name, $vars, $storeId);
+                                $translate->setTranslateInLine(true);
+                                Mage::helper('ebizmarts_abandonedcart')->saveMail('new order', $email, $name, "", $storeId);
+                            }
                         }
                     }
                 }

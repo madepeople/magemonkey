@@ -437,6 +437,8 @@ class Ebizmarts_MageMonkey_Model_Cron
             if ($storeId != $info['store_id']) {
                 $api = Mage::getSingleton('monkey/api', array('store' => $info['store_id']));
                 $storeId = $info['store_id'];
+            }else{
+                $api = Mage::getSingleton('monkey/api');
             }
             if (isset($info['campaign_id'])) {
                 $api->campaignEcommOrderAdd($info);

@@ -18,6 +18,7 @@ class Ebizmarts_MageMonkey_Model_Observer
      */
     public function handleSubscriber(Varien_Event_Observer $observer)
     {
+        Mage::log(__METHOD__, null, 'santiago.log', true);
         if (!Mage::helper('monkey')->canMonkey()) {
             return $observer;
         }
@@ -33,26 +34,34 @@ class Ebizmarts_MageMonkey_Model_Observer
         }
 
         if ($subscriber->getBulksync()) {
+            Mage::log('return', null, 'santiago.log', true);
             return $observer;
         }
 
         if((Mage::getSingleton('core/session')->getIsOneStepCheckout() || Mage::getSingleton('core/session')->getMonkeyCheckout()) && !Mage::getStoreConfig(Ebizmarts_MageMonkey_Model_Config::GENERAL_CHECKOUT_SUBSCRIBE, $subscriber->getStoreId()))
         {
+            Mage::log('return 2', null, 'santiago.log', true);
             return $observer;
         }
         if(Mage::getStoreConfig(Mage_Newsletter_Model_Subscriber::XML_PATH_CONFIRMATION_FLAG, $subscriber->getStoreId()) && Mage::getStoreConfig(Ebizmarts_MageMonkey_Model_Config::GENERAL_CONFIRMATION_EMAIL, $subscriber->getStoreId()) && !Mage::getSingleton('customer/session')->isLoggedIn() && Mage::app()->getRequest()->getActionName() != 'createpost'){
+            Mage::log('return 3', null, 'santiago.log', true);
             return $observer;
         }
 
         if (Mage::getSingleton('core/session')->getIsOneStepCheckout() && !Mage::getSingleton('core/session')->getMonkeyCheckout()) {
+            Mage::log('return 4', null, 'santiago.log', true);
             return $observer;
         }
+        Mage::log('isStatusChanged', null, 'santiago.log', true);
         if (TRUE === $subscriber->getIsStatusChanged()) {
+            Mage::log('if', null, 'santiago.log', true);
             Mage::getSingleton('core/session')->setIsHandleSubscriber(TRUE);
             if (Mage::getSingleton('core/session')->getIsOneStepCheckout() || Mage::getSingleton('core/session')->getMonkeyCheckout()) {
+                Mage::log('if 2', null, 'santiago.log', true);
                 $saveOnDb = Mage::helper('monkey')->config('checkout_async');
                 Mage::helper('monkey')->subscribeToList($subscriber, $saveOnDb);
             } else {
+                Mage::log('else', null, 'santiago.log', true);
                 $post = Mage::app()->getRequest()->getPost();
                 if (isset($post['email']) || isset($post['magemonkey_subscribe']) && $post['magemonkey_subscribe'] || Mage::getSingleton('core/session')->getIsUpdateCustomer() || $subscriber->getStatus() == Mage_Newsletter_Model_Subscriber::STATUS_SUBSCRIBED || $subscriber->getStatus() == Mage_Newsletter_Model_Subscriber::STATUS_UNCONFIRMED || $subscriber->getStatus() == Mage_Newsletter_Model_Subscriber::STATUS_NOT_ACTIVE) {
                     Mage::helper('monkey')->subscribeToList($subscriber, 0);
@@ -60,6 +69,7 @@ class Ebizmarts_MageMonkey_Model_Observer
             }
             Mage::getSingleton('core/session')->setIsHandleSubscriber(FALSE);
         }
+        Mage::log('out', null, 'santiago.log', true);
         return $observer;
     }
 
@@ -285,6 +295,7 @@ class Ebizmarts_MageMonkey_Model_Observer
      */
     public function updateCustomer(Varien_Event_Observer $observer)
     {
+        Mage::log(__METHOD__, null, 'santiago.log', true);
         if (!Mage::helper('monkey')->canMonkey()) {
             return $observer;
         }
@@ -445,14 +456,16 @@ class Ebizmarts_MageMonkey_Model_Observer
      */
     public function massActionOption(Varien_Event_Observer $observer)
     {
+        Mage::log(__METHOD__, null, 'ebizmarts.log', true);
         if (!Mage::helper('monkey')->canMonkey()) {
             return $observer;
         }
         $block = $observer->getEvent()->getBlock();
 
         if ($block instanceof Mage_Adminhtml_Block_Widget_Grid_Massaction || $block instanceof Enterprise_SalesArchive_Block_Adminhtml_Sales_Order_Grid_Massaction) {
-
+            Mage::log('isInstance', null, 'ebizmarts.log', true);
             if ($block->getRequest()->getControllerName() == 'sales_order') {
+                Mage::log('isSalesOrder', null, 'ebizmarts.log', true);
 
                 $block->addItem('magemonkey_ecommerce360', array(
                     'label' => Mage::helper('monkey')->__('Send to MailChimp'),

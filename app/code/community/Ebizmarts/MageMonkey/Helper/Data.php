@@ -505,7 +505,8 @@ class Ebizmarts_MageMonkey_Helper_Data extends Mage_Core_Helper_Abstract
                     case 'dob':
                         $dob = (string)$customer->getData(strtolower($customAtt));
                         if ($dob) {
-                            $merge_vars[$key] = (substr($dob, 5, 2) . '/' . substr($dob, 8, 2));
+                            Mage::log($dob, null, 'santiago.log', true);
+                            $merge_vars[$key] =  (substr($dob, 5, 2) . '/' . substr($dob, 8, 2) . '/' . substr($dob, 0, 4));
                         }
                         break;
                     case 'billing_address':
